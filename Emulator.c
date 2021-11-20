@@ -118,7 +118,7 @@ void findFile(char * name)
 		
   else{
   	
-	printf("Filename: %s\n", "Time.c");		
+	printf("Filename: %s\n", name);		
     start = ftell(fp);
     
 	fseek (fp, 0, SEEK_END);
@@ -138,6 +138,32 @@ void printWorkingDir()
 	char wd[250];
 	getcwd(wd, sizeof(wd));
 	printf("%s\n\n", wd);
+}
+
+void renameFile(char* old, char* newname)
+{
+	 FILE * fp = fopen( old, "rw" );
+	 if(fp==NULL)
+	 {
+	 	printf("ERROR FILE NOT FOUND");
+	 }
+	 else{
+	 	fclose(fp);
+	 	rename(old, newname);
+	 }
+}
+
+deleteFile(char* name)
+{
+	 FILE * fp = fopen( name, "rw" );
+	 if(fp==NULL)
+	 {
+	 	printf("ERROR FILE NOT FOUND");
+	 }
+	 else{
+	 	fclose(fp);
+	 	remove(name);
+	 }
 }
 
 void * marquee(void * arg)
@@ -250,7 +276,27 @@ int main()
 		else if(strcmp (token1, say)==0)
 		{
 			token1 = strtok(NULL, "");
-			printf("%s \n",token1);
+			if (token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else
+				printf("%s \n",token1);
+		}
+		
+		else if(strcmp (token1, mkfldr)==0)
+		{
+			
+			token1 = strtok(NULL, "\n");
+			int check;
+			if (token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				check = mkdir(token1);
+				if (!check)
+        			printf("DIRECTORY %s HAS BEEN CREATED\n", token1);
+    			else 
+        			printf("UNABLE TO CREATE DIRECTORY\n");
+			}
+			//printf("%s \n",token1);
 		}
 		
 		else if(strcmp (token1, title)==0)
@@ -278,19 +324,59 @@ int main()
 		else if(strcmp (token1, find)==0)
 		{
 			token1 = strtok(NULL, " \n");
-			
-			findFile(token1);
+			if(token1!=NULL)	
+				findFile(token1);
+			else
+				printf("SYNTAX ERROR!\n\n");
+		}
+		
+		else if(strcmp (token1, delete)==0)
+		{
+			token1 = strtok(NULL, " \n");
+			if(token1!=NULL)	
+				deleteFile(token1);
+			else
+				printf("SYNTAX ERROR!\n\n");
 		}
 		
 		else if(strcmp (token1, color)==0)
 		{
 			char bg[20],fg[20];
 			token1 = strtok(NULL, " ");
-			strcpy(bg,token1);
+			if(token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				strcpy(bg,token1);
+				token1 = strtok(NULL, " \n");
+				if (token1==NULL)
+					printf("SYNTAX ERROR!\n\n");
+				else
+					{
+						strcpy(fg,token1);
+						printcolor(bg,fg);
+					}
+				}
+		}
+		
+		else if(strcmp (token1, rename)==0)
+		{
+			
+			char old[40],newname[40];
 			token1 = strtok(NULL, " ");
-			strcpy(fg,token1);
-			//printf("%s %s",bg ,fg);
-			printcolor(bg,fg);
+			if(token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+			
+				strcpy(old,token1);
+				token1 = strtok(NULL, " \n");
+				if(token1==NULL)
+					printf("SYNTAX ERROR!\n\n");
+				else{
+					strcpy(newname,token1);
+				
+					renameFile(old,newname);
+				}
+			}
 		}
 		
 		else{
