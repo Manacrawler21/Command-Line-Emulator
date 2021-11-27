@@ -11,17 +11,6 @@
 #include <dirent.h> 
 #include <sys/stat.h>
 
-/*void delay(int milliseconds)
-{
-    long pause;
-    clock_t now,then;
-
-    pause = milliseconds*(CLOCKS_PER_SEC/1000);
-    now = then = clock();
-    while( (now-then) < pause )
-        now = clock();
-}*/
-
 void getTime()
 {
   time_t raw;
@@ -166,7 +155,120 @@ deleteFile(char* name)
 	 }
 }
 
-void * marquee(void * arg)
+void sortCommand(char* filename, int lineCount)
+{
+	 strcat(filename, ".txt");
+	 FILE * fp = fopen( filename, "r" );
+	 if(fp==NULL)
+	 {
+	 	printf("ERROR FILE NOT FOUND\n\n");
+	 }
+	 else{
+	 	
+	 	int i, j;
+	 	int bufferLength = 255;
+	 	char buffer[bufferLength];
+	 	char temp[bufferLength];
+	 	char c[100][255];
+
+	 	printf("Input: \n");
+	 	for (i = 0; i < lineCount; i++)
+	 	{
+	 		fgets(buffer, bufferLength, fp);
+	 		printf("%s", buffer);
+	 		strcpy(c[i], buffer);
+	 	}
+	 	
+		fclose(fp);
+
+	 	printf("\n\nOutput: \n");
+	 	for (i = 0; i < lineCount-1; i++)
+	 	{
+	 		for (j = i+1; j < lineCount; j++)
+	 		{
+	 			if (strcmp(c[i], c[j]) > 0)
+	 			{
+	 				strcpy(temp, c[i]);
+	 				strcpy(c[i], c[j]);
+	 				strcpy(c[j], temp);
+	 			}
+	 		}
+	 	}
+		for (i = 0; i < lineCount; i++)
+		 		printf("%s", c[i]);
+	 	
+	 		
+	 }
+}
+
+void openFile (char* textFile)
+{
+	textFile[strcspn(textFile, "\n")] = 0;
+	strcat(textFile, ".txt");
+	 FILE * fp = fopen( textFile, "r" );
+	 if(fp==NULL)
+	 {
+	 	printf("ERROR FILE NOT FOUND\n\n");
+	 }
+	 else
+	 {
+	 		char ch;
+	 	while((ch = fgetc(fp)) != EOF)
+	 		putchar(ch);
+
+	 }
+
+	 fclose(fp);
+}
+
+void copyCommand (char* sourceFile, char* destFile)
+{
+	 strcat(sourceFile, ".txt");
+	 strcat(destFile, ".txt");
+	 FILE * fp = fopen( sourceFile, "r" );
+	 FILE * fp2;
+
+	 char c;
+
+	 if(fp==NULL)
+	 {
+	 	printf("ERROR FILE NOT FOUND\n\n");
+	 }
+	 else
+	 {
+	 	fp2 = fopen( destFile, "r" );
+
+	 	if (fp2 == NULL)
+	 	{
+	 		fclose (fp2);
+	 		fp2 = fopen( destFile, "w");
+	 		c = fgetc(fp);
+	 		while (c != EOF)
+	 		{
+	 			fputc(c, fp2);
+	 			c = fgetc(fp);
+	 		}
+	 	}
+	 	else printf("Destination file already exists.\n");
+	 }
+
+	 fclose(fp);
+	 fclose(fp2);
+}
+
+/*void delay(int milliseconds)
+{
+    long pause;
+    clock_t now,then;
+
+    pause = milliseconds*(CLOCKS_PER_SEC/1000);
+    now = then = clock();
+    while( (now-then) < pause )
+        now = clock();
+}*/
+
+/*
+void * cMarquee(void * arg)
 {
 	//printf("\n");
 	int i, max=0, min=80;
@@ -193,11 +295,57 @@ void * marquee(void * arg)
 	}
 }
 
+*/
+void delay (unsigned int value)
+{
+	unsigned int test1 = 0;
+	unsigned int test2 = 0;
+
+	for (test1 = 0; test1<value; test1++)
+	{
+		for (test2 = 0; test2<test1; test2++)
+		{
+			delay(1);
+		}
+	}
+}
+
+void * marqueeCommand (void * string)
+{
+	
+	printf("\n");
+	
+	const int del = 6000;
+	int shift = 0;
+
+	for (shift = 0; shift < 300; shift++)
+	{
+		delay(del);
+		putchar('o');
+	}
+ /*
+	char chars[] = {'-', '\\', '|', '/'};
+        unsigned int i;
+
+        for (i = 0; ; ++i) {
+                printf("%c", chars[i % sizeof(chars)]);
+                fflush(stdout);
+                usleep(200000);
+        }
+  */
+}
+
 int main()
 {
 	char cmd[100], exit[6], say[4], cls[5], dir[5], pwd[4], time[5], title[7], color[6], mkfldr[7], find[5], open[5], copy[5], rename[7], delete[7], sort[5], marquee[8];
 	char * token1;
+
+	COORD c;
+  c.X = 6;
+  c.Y = 0;
+  
 	
+	system("cls");
 	//done
 	strcpy (exit, "exit");
 	exit[4]='\n';
@@ -258,8 +406,11 @@ int main()
 	
 	while(1)
 	{
-		
+		delay(1000);
 		printf("MyOS >");
+
+
+    //SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 		fgets(cmd, 99, stdin);
 		
 		token1 = strtok(cmd," ");
@@ -303,6 +454,7 @@ int main()
 		{
 			token1 = strtok(NULL, "");
 			SetConsoleTitle(token1);
+			printf("Title has been set.");
 			printf("\n");
 		}
 		
@@ -379,9 +531,81 @@ int main()
 			}
 		}
 		
-		else{
-			printf("SYNTAX ERROR!\n\n");
+		// TODO
+		else if(strcmp (token1, sort)==0)
+		{
+			char filename[20],numLines[4];
+			token1 = strtok(NULL, " ");
+			if(token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				strcpy(filename,token1);
+				token1 = strtok(NULL, " \n");
+				if (token1==NULL)
+					printf("SYNTAX ERROR!\n\n");
+				else
+					{
+						strcpy(numLines,token1);
+						int lineCount = atoi(numLines);
+						sortCommand(filename,lineCount	);
+					}
+				}
 		}
+
+		else if(strcmp (token1, open)==0)
+		{
+			char textFile[20];
+			token1 = strtok(NULL, " ");
+			if(token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				strcpy(textFile,token1);
+				openFile(textFile);
+			}
+		}
+
+		else if(strcmp (token1, copy)==0)
+		{
+			char sourceFile[20], destFile[20];
+			token1 = strtok(NULL, " ");
+			if(token1==NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				strcpy(sourceFile,token1);
+				token1 = strtok(NULL, " \n");
+				if (token1==NULL)
+					printf("SYNTAX ERROR!\n\n");
+				else
+					{
+						strcpy(destFile,token1);
+						copyCommand(sourceFile,destFile);
+					}
+				}
+		}
+
+		else if(strcmp (token1, marquee) == 0)
+		{
+			pthread_t id;
+
+			char stringMarquee[256];
+
+			token1 = strtok(NULL, " ");
+
+			if (token1 == NULL)
+				printf("SYNTAX ERROR!\n\n");
+			else{
+				strcpy(stringMarquee, token1);
+				//marqueeCommand(stringMarquee);
+				pthread_create(&id, NULL, marqueeCommand, stringMarquee);
+				
+				printf("\n");
+			}
+			
+		}
+
+		else{
+				printf("SYNTAX ERROR!\n\n");
+			}
 		
 	}
 	
@@ -400,6 +624,8 @@ int main()
 	delay(250);
 	printf("\rHELLO WORLD");
 	printf("\n");*/
+
+
 	return 0;	
 }
 
