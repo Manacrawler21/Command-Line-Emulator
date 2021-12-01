@@ -11,13 +11,15 @@
 #include <dirent.h> 
 #include <sys/stat.h>
 
+int cursorPosition;
+
 void getTime()
 {
   time_t raw;
   struct tm * info;
   time ( &raw );
   info = localtime ( &raw );
-  printf ( "%s", asctime (info) );
+  printf ( "%s\n", asctime (info) );
 }
 
 char colortranslate(char* code)
@@ -52,6 +54,7 @@ void printcolor(char* bg, char* fg)
 	color[8]='\0';
 	//printf("\ninput: %s\n", color);
 	system(color);		
+	printf("\n\n");
 }
 
 void printDir (){
@@ -67,14 +70,18 @@ void printDir (){
   	dir = readdir(d);
   	dir = readdir(d);
     while ((dir = readdir(d)) != NULL) {
+
       printf("Filename: %s\n", dir->d_name);
+      cursorPosition++;
+
     	stat(dir->d_name,&fStat);
 		fp = fopen( dir->d_name, "rw" );
     	
     	if( fp == NULL )
+    	{
         	printf( "Opening file error\n" );
-		
-		
+        	cursorPosition++;
+    	}
     	else{
 		
     		start = ftell(fp);
@@ -82,9 +89,10 @@ void printDir (){
     		size = ftell(fp);
     		fseek (fp, start, SEEK_SET);
     		fclose(fp);
-			printf( "File Size: %d bytes\n", size );
-			
-			printf("Created On: %s\n", ctime(&fStat.st_ctime));
+				printf( "File Size: %d bytes\n", size );
+				printf("Created On: %s\n", ctime(&fStat.st_ctime));
+
+				cursorPosition += 2;
 		}
     	
     }
@@ -256,83 +264,59 @@ void copyCommand (char* sourceFile, char* destFile)
 	 fclose(fp2);
 }
 
-/*void delay(int milliseconds)
-{
-    long pause;
-    clock_t now,then;
+void * testMarquee(void * text){
 
-    pause = milliseconds*(CLOCKS_PER_SEC/1000);
-    now = then = clock();
-    while( (now-then) < pause )
-        now = clock();
-}*/
+	int stringLength;
+	int c, loop;
 
-/*
-void * cMarquee(void * arg)
-{
-	//printf("\n");
-	int i, max=0, min=80;
-	while(1){
+	int barLength = 100;
+
+	stringLength = strlen(text)-1;
+
+	//printf("%d", stringLength);
 	
-	sleep(1);
-	printf("\r");
-	if(max>80)
-	{
-		max = 0;
-		min = 80;
-		
-	}
-	for(i=0;i<max;i++){
-		printf(" ");
-	}
-	printf("%s",(char*)arg);
-	for(i=0;i<min;i++){
-		printf(" ");
-	}
-	//printf("\n");
-	max++;
-	min--;
-	}
-}
+	char subtext[20];
+	strcpy(subtext, text);
 
-*/
-void delay (unsigned int value)
-{
-	unsigned int test1 = 0;
-	unsigned int test2 = 0;
+	HANDLE wHnd;
 
-	for (test1 = 0; test1<value; test1++)
+	wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD characterBufferSize = {barLength, 1}; // Should not exceed CHAR_INFO str
+	COORD characterPosition = {0,0}; // Starts at leftmost
+	SMALL_RECT consoleWriteArea = {0, cursorPosition-2, barLength, cursorPosition-2}; //SYNTAX: 1stparam= x of top left, 2ndparam= y of top left, 3rdparam= x of bottom right, 4thparam=y of bottom right
+
+	CHAR_INFO str[barLength];
+
+	// INITIALIZE LINE
+	for (loop = 0; loop < barLength; loop++)
 	{
-		for (test2 = 0; test2<test1; test2++)
+		// Placeholder
+		str[loop].Char.AsciiChar = ' ';
+		str[loop].Attributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+
+	}
+
+	int count;
+	// DRAW
+	int lineCounter;
+
+	for (loop = 0; loop < barLength-stringLength ; loop++)
+	{
+		count = 0;
+
+		str[loop].Char.AsciiChar = ' ';
+
+		for (c = loop+1; c < stringLength+loop+1; c++)
 		{
-			delay(1);
+			str[c].Char.AsciiChar = subtext[count];
+			str[c].Attributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+			count++;
 		}
+		
+		WriteConsoleOutput(wHnd, str, characterBufferSize, characterPosition, &consoleWriteArea);
+
+		sleep(1);
 	}
-}
-
-void * marqueeCommand (void * string)
-{
-	
-	printf("\n");
-	
-	const int del = 6000;
-	int shift = 0;
-
-	for (shift = 0; shift < 300; shift++)
-	{
-		delay(del);
-		putchar('o');
-	}
- /*
-	char chars[] = {'-', '\\', '|', '/'};
-        unsigned int i;
-
-        for (i = 0; ; ++i) {
-                printf("%c", chars[i % sizeof(chars)]);
-                fflush(stdout);
-                usleep(200000);
-        }
-  */
 }
 
 int main()
@@ -340,11 +324,17 @@ int main()
 	char cmd[100], exit[6], say[4], cls[5], dir[5], pwd[4], time[5], title[7], color[6], mkfldr[7], find[5], open[5], copy[5], rename[7], delete[7], sort[5], marquee[8];
 	char * token1;
 
-	COORD c;
-  c.X = 6;
-  c.Y = 0;
-  
-	
+	//HANDLE wHnd; /* write (output) handle */
+
+	//SMALL_RECT windowSize = {0, 0, 69, 99};
+	//COORD bufferSize = {70, 100};
+
+	/* Set the window size */
+  //SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
+  //SetConsoleScreenBufferSize(wHnd, bufferSize);
+
+  cursorPosition = 1;	
+
 	system("cls");
 	//done
 	strcpy (exit, "exit");
@@ -406,15 +396,12 @@ int main()
 	
 	while(1)
 	{
-		delay(1000);
-		printf("MyOS >");
+		printf("[%d] MyOS >", cursorPosition);
 
-
-    //SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 		fgets(cmd, 99, stdin);
 		
 		token1 = strtok(cmd," ");
-		//printf("%s",token1);
+
 		if(strcmp(exit, token1)==0)
 		{
 				break;
@@ -422,10 +409,14 @@ int main()
 		else if(strcmp (token1, cls)==0)
 		{
 				system("cls");	
+				cursorPosition = 1;
+
+				// TODO: What if there is marquee and cls is called
 		}
 		
 		else if(strcmp (token1, say)==0)
 		{
+			cursorPosition += 3;
 			token1 = strtok(NULL, "");
 			if (token1==NULL)
 				printf("SYNTAX ERROR!\n\n");
@@ -435,7 +426,7 @@ int main()
 		
 		else if(strcmp (token1, mkfldr)==0)
 		{
-			
+			cursorPosition += 3;
 			token1 = strtok(NULL, "\n");
 			int check;
 			if (token1==NULL)
@@ -443,38 +434,41 @@ int main()
 			else{
 				check = mkdir(token1);
 				if (!check)
-        			printf("DIRECTORY %s HAS BEEN CREATED\n", token1);
+        			printf("DIRECTORY %s HAS BEEN CREATED\n\n", token1);
     			else 
-        			printf("UNABLE TO CREATE DIRECTORY\n");
+        			printf("UNABLE TO CREATE DIRECTORY\n\n");
 			}
-			//printf("%s \n",token1);
 		}
 		
 		else if(strcmp (token1, title)==0)
 		{
+			cursorPosition += 3;
 			token1 = strtok(NULL, "");
 			SetConsoleTitle(token1);
-			printf("Title has been set.");
-			printf("\n");
+			printf("Title has been set.\n\n");
 		}
 		
 		else if(strcmp (token1, time)==0)
 		{
+			cursorPosition += 3;
 			getTime();
 		}
 		
 		else if(strcmp (token1, dir)==0)
 		{
+			cursorPosition += 5;
 			printDir();
 		}
 		
 		else if(strcmp (token1, pwd)==0)
 		{
+			cursorPosition += 3;
 			printWorkingDir();
 		}
 		
 		else if(strcmp (token1, find)==0)
 		{
+			cursorPosition += 3;
 			token1 = strtok(NULL, " \n");
 			if(token1!=NULL)	
 				findFile(token1);
@@ -484,6 +478,7 @@ int main()
 		
 		else if(strcmp (token1, delete)==0)
 		{
+			cursorPosition += 3;
 			token1 = strtok(NULL, " \n");
 			if(token1!=NULL)	
 				deleteFile(token1);
@@ -493,6 +488,7 @@ int main()
 		
 		else if(strcmp (token1, color)==0)
 		{
+			cursorPosition += 3;
 			char bg[20],fg[20];
 			token1 = strtok(NULL, " ");
 			if(token1==NULL)
@@ -512,7 +508,7 @@ int main()
 		
 		else if(strcmp (token1, rename)==0)
 		{
-			
+			cursorPosition += 3;
 			char old[40],newname[40];
 			token1 = strtok(NULL, " ");
 			if(token1==NULL)
@@ -531,7 +527,7 @@ int main()
 			}
 		}
 		
-		// TODO
+		// TODO : Configure cursorPosition for this
 		else if(strcmp (token1, sort)==0)
 		{
 			char filename[20],numLines[4];
@@ -552,6 +548,7 @@ int main()
 				}
 		}
 
+		// TODO : Configure cursorPosition for this
 		else if(strcmp (token1, open)==0)
 		{
 			char textFile[20];
@@ -566,6 +563,7 @@ int main()
 
 		else if(strcmp (token1, copy)==0)
 		{
+			cursorPosition += 3;
 			char sourceFile[20], destFile[20];
 			token1 = strtok(NULL, " ");
 			if(token1==NULL)
@@ -586,45 +584,25 @@ int main()
 		else if(strcmp (token1, marquee) == 0)
 		{
 			pthread_t id;
-
-			char stringMarquee[256];
-
+			char stringMarquee[20];
+			
 			token1 = strtok(NULL, " ");
 
 			if (token1 == NULL)
 				printf("SYNTAX ERROR!\n\n");
 			else{
 				strcpy(stringMarquee, token1);
-				//marqueeCommand(stringMarquee);
-				pthread_create(&id, NULL, marqueeCommand, stringMarquee);
-				
+				pthread_create(&id, NULL, testMarquee, stringMarquee);
+				cursorPosition += 2;
 				printf("\n");
-			}
-			
+			}			
 		}
 
 		else{
 				printf("SYNTAX ERROR!\n\n");
+				cursorPosition += 3;
 			}
-		
 	}
-	
-	//pthread_t thread1,thread2;
-	//pthread_create(&thread1, NULL, myturn, NULL);
-	//pthread_create(&thread2, NULL, yourturn, NULL);
-	
-	//pthread_create(&thread1, NULL, marquee, "Hello!");
-    //pthread_create(&thread1, NULL, marquee, "world!");
-	//pthread_join(thread1, NULL);
-	//pthread_create(&thread2, NULL, marquee, "hello world");
-	//pthread_join(thread1, NULL);
-	//pthread_join(thread2, NULL);
-	//marquee("Hello World");
-    /*printf("HELLO HELLO HELLO HELLO");
-	delay(250);
-	printf("\rHELLO WORLD");
-	printf("\n");*/
-
 
 	return 0;	
 }
