@@ -79,8 +79,8 @@ void printDir (){
     	
     	if( fp == NULL )
     	{
-        	printf( "Opening file error\n" );
-        	cursorPosition++;
+        	printf( "Opening file error\n\n" );
+        	cursorPosition += 2 ;
     	}
     	else{
 		
@@ -96,6 +96,9 @@ void printDir (){
 		}
     	
     }
+
+    printf("\n");
+    cursorPosition += 2;
     closedir(d);
   }
 }
@@ -110,7 +113,7 @@ void findFile(char * name)
   stat(name,&fStat);
   
   if( fp == NULL )
-    printf( "ERROR FILE DOES NOT EXIST\n" );
+    printf( "ERROR FILE DOES NOT EXIST\n\n" );
 		
 		
   else{
@@ -123,9 +126,10 @@ void findFile(char * name)
     fseek (fp, start, SEEK_SET);
     
     fclose(fp);
-	printf( "File Size: %d bytes\n", size );
-			
-	printf("Created On: %s\n", ctime(&fStat.st_ctime));
+		printf( "File Size: %d bytes\n", size );
+				
+		printf("Created On: %s\n", ctime(&fStat.st_ctime));
+		cursorPosition += 2;
 	}
     	
 }
@@ -142,11 +146,12 @@ void renameFile(char* old, char* newname)
 	 FILE * fp = fopen( old, "rw" );
 	 if(fp==NULL)
 	 {
-	 	printf("ERROR FILE NOT FOUND");
+	 	printf("ERROR FILE NOT FOUND\n\n");
 	 }
 	 else{
 	 	fclose(fp);
 	 	rename(old, newname);
+	 	printf("\n\n");
 	 }
 }
 
@@ -155,11 +160,12 @@ deleteFile(char* name)
 	 FILE * fp = fopen( name, "rw" );
 	 if(fp==NULL)
 	 {
-	 	printf("ERROR FILE NOT FOUND");
+	 	printf("ERROR FILE NOT FOUND\n\n");
 	 }
 	 else{
 	 	fclose(fp);
 	 	remove(name);
+	 	printf("\n\n");
 	 }
 }
 
@@ -185,11 +191,12 @@ void sortCommand(char* filename, int lineCount)
 	 		fgets(buffer, bufferLength, fp);
 	 		printf("%s", buffer);
 	 		strcpy(c[i], buffer);
+	 		cursorPosition++;
 	 	}
 	 	
 		fclose(fp);
 
-	 	printf("\n\nOutput: \n");
+	 	printf("\nOutput: \n");
 	 	for (i = 0; i < lineCount-1; i++)
 	 	{
 	 		for (j = i+1; j < lineCount; j++)
@@ -203,10 +210,15 @@ void sortCommand(char* filename, int lineCount)
 	 		}
 	 	}
 		for (i = 0; i < lineCount; i++)
+		{
 		 		printf("%s", c[i]);
+				cursorPosition++;
+		}
 	 	
 	 		
 	 }
+
+	 cursorPosition += 2;
 }
 
 void openFile (char* textFile)
@@ -222,9 +234,15 @@ void openFile (char* textFile)
 	 {
 	 		char ch;
 	 	while((ch = fgetc(fp)) != EOF)
+	 	{
 	 		putchar(ch);
 
+	 		if(ch == '\n') cursorPosition++;
+	 	}
+
 	 }
+
+	 cursorPosition++;
 
 	 fclose(fp);
 }
@@ -256,6 +274,8 @@ void copyCommand (char* sourceFile, char* destFile)
 	 			fputc(c, fp2);
 	 			c = fgetc(fp);
 	 		}
+
+	 		printf("\n\n");
 	 	}
 	 	else printf("Destination file already exists.\n");
 	 }
@@ -546,6 +566,7 @@ int main()
 						sortCommand(filename,lineCount	);
 					}
 				}
+				cursorPosition += 2;
 		}
 
 		// TODO : Configure cursorPosition for this
