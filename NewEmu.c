@@ -24,21 +24,27 @@ void getTime()
 
 char colortranslate(char* code)
 {
-	if (strncmp("black",code, 3) >= 0)
+	if (strncmp("black",code, 3) == 0)
 		return '0';
-	else if (strncmp("blue",code, 3) >= 0)
+	else if (strncmp("blue",code, 3) == 0)
 		return '1';
-	else if (strncmp("green",code, 3) >= 0)
+	else if (strncmp("green",code, 3) == 0)
 		return '2';
-	else if (strncmp("red",code, 3) >= 0)
+	else if (strncmp("red",code, 3) == 0)
 		return '4';
-	else if (strncmp("purple",code, 3) >= 0)
+	else if (strncmp("purple",code, 3) == 0)
 		return '5';
-	else if (strncmp("yellow",code, 3) >= 0)
+	else if (strncmp("yellow",code, 3) == 0)
+	{
+		printf("white daw hahahha");
 		return '6';
-	else if (strncmp("white",code, 3) >= 0)
+	}
+	else if (strncmp("white",code, 3) == 0)
+	{
+		printf("why");
 		return '7';
-	else if (strncmp("gray",code, 3) >= 0)
+	}
+	else if (strncmp("gray",code, 3) == 0)
 		return '8';
 }
 
@@ -92,13 +98,13 @@ void printDir (){
 				printf( "File Size: %d bytes\n", size );
 				printf("Created On: %s\n", ctime(&fStat.st_ctime));
 
-				cursorPosition += 2;
-		}
+				cursorPosition += 3;
+			}
     	
     }
 
     printf("\n");
-    cursorPosition += 2;
+    cursorPosition ++;
     closedir(d);
   }
 }
@@ -114,10 +120,8 @@ void findFile(char * name)
   
   if( fp == NULL )
     printf( "ERROR FILE DOES NOT EXIST\n\n" );
-		
-		
   else{
-  	
+  printf("File found!\n");
 	printf("Filename: %s\n", name);		
     start = ftell(fp);
     
@@ -129,7 +133,7 @@ void findFile(char * name)
 		printf( "File Size: %d bytes\n", size );
 				
 		printf("Created On: %s\n", ctime(&fStat.st_ctime));
-		cursorPosition += 2;
+		cursorPosition += 3;
 	}
     	
 }
@@ -143,20 +147,25 @@ void printWorkingDir()
 
 void renameFile(char* old, char* newname)
 {
+	strcat(old, ".txt");
+	strcat(newname, ".txt");
 	 FILE * fp = fopen( old, "rw" );
 	 if(fp==NULL)
 	 {
 	 	printf("ERROR FILE NOT FOUND\n\n");
 	 }
 	 else{
+	 	printf("%s renamed to %s\n", old, newname);
 	 	fclose(fp);
 	 	rename(old, newname);
-	 	printf("\n\n");
+	 	printf("\n");
+
 	 }
 }
 
-deleteFile(char* name)
+void deleteFile(char* name)
 {
+	strcat(name, ".txt");
 	 FILE * fp = fopen( name, "rw" );
 	 if(fp==NULL)
 	 {
@@ -165,7 +174,8 @@ deleteFile(char* name)
 	 else{
 	 	fclose(fp);
 	 	remove(name);
-	 	printf("\n\n");
+	 	printf("%s deleted.\n", name);
+	 	printf("\n");
 	 }
 }
 
@@ -214,11 +224,9 @@ void sortCommand(char* filename, int lineCount)
 		 		printf("%s", c[i]);
 				cursorPosition++;
 		}
-	 	
-	 		
 	 }
 
-	 cursorPosition += 2;
+	 cursorPosition ++;
 }
 
 void openFile (char* textFile)
@@ -229,6 +237,7 @@ void openFile (char* textFile)
 	 if(fp==NULL)
 	 {
 	 	printf("ERROR FILE NOT FOUND\n\n");
+	 	cursorPosition +=2;	
 	 }
 	 else
 	 {
@@ -239,10 +248,8 @@ void openFile (char* textFile)
 
 	 		if(ch == '\n') cursorPosition++;
 	 	}
-
+	 	cursorPosition++;
 	 }
-
-	 cursorPosition++;
 
 	 fclose(fp);
 }
@@ -262,12 +269,14 @@ void copyCommand (char* sourceFile, char* destFile)
 	 }
 	 else
 	 {
+	 	
 	 	fp2 = fopen( destFile, "r" );
 
 	 	if (fp2 == NULL)
 	 	{
 	 		fclose (fp2);
 	 		fp2 = fopen( destFile, "w");
+	 		printf("File copied to %s\n", destFile);
 	 		c = fgetc(fp);
 	 		while (c != EOF)
 	 		{
@@ -275,9 +284,9 @@ void copyCommand (char* sourceFile, char* destFile)
 	 			c = fgetc(fp);
 	 		}
 
-	 		printf("\n\n");
+	 		printf("\n");
 	 	}
-	 	else printf("Destination file already exists.\n");
+	 	else printf("Destination file already exists.\n\n");
 	 }
 
 	 fclose(fp);
@@ -312,7 +321,7 @@ void * testMarquee(void * text){
 	{
 		// Placeholder
 		str[loop].Char.AsciiChar = ' ';
-		str[loop].Attributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+		str[loop].Attributes = FOREGROUND_GREEN ;
 
 	}
 
@@ -329,7 +338,7 @@ void * testMarquee(void * text){
 		for (c = loop+1; c < stringLength+loop+1; c++)
 		{
 			str[c].Char.AsciiChar = subtext[count];
-			str[c].Attributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+			str[c].Attributes = FOREGROUND_INTENSITY;
 			count++;
 		}
 		
@@ -344,6 +353,7 @@ int main()
 	char cmd[100], exit[6], say[4], cls[5], dir[5], pwd[4], time[5], title[7], color[6], mkfldr[7], find[5], open[5], copy[5], rename[7], delete[7], sort[5], marquee[8];
 	char * token1;
 
+	pthread_t id;
 	//HANDLE wHnd; /* write (output) handle */
 
 	//SMALL_RECT windowSize = {0, 0, 69, 99};
@@ -432,6 +442,7 @@ int main()
 				cursorPosition = 1;
 
 				// TODO: What if there is marquee and cls is called
+				pthread_cancel(id);
 		}
 		
 		else if(strcmp (token1, say)==0)
@@ -476,7 +487,7 @@ int main()
 		
 		else if(strcmp (token1, dir)==0)
 		{
-			cursorPosition += 5;
+			cursorPosition ++;
 			printDir();
 		}
 		
@@ -566,7 +577,7 @@ int main()
 						sortCommand(filename,lineCount	);
 					}
 				}
-				cursorPosition += 2;
+				cursorPosition += 3;
 		}
 
 		// TODO : Configure cursorPosition for this
@@ -580,6 +591,7 @@ int main()
 				strcpy(textFile,token1);
 				openFile(textFile);
 			}
+			cursorPosition ++;
 		}
 
 		else if(strcmp (token1, copy)==0)
@@ -600,11 +612,12 @@ int main()
 						copyCommand(sourceFile,destFile);
 					}
 				}
+
 		}
 
 		else if(strcmp (token1, marquee) == 0)
 		{
-			pthread_t id;
+			
 			char stringMarquee[50];
 			
 			token1 = strtok(NULL, "");
